@@ -15,17 +15,31 @@ from PyQt6.QtGui import QIcon, QAction
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QObject
 from qasync import QEventLoop, asyncSlot
 
-from tts_engine import TTSEngine
-from audio_player import AudioPlayer
-from ui_overlay import UIOverlay
+# Robust path handling for relative components
+BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 
 # Logging Setup
-LOG_FILE = os.path.join(os.getcwd(), "app.log")
+LOG_FILE = os.path.join(BASE_PATH, "app.log")
 logging.basicConfig(
     filename=LOG_FILE,
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
+
+# Redirect standard output and error to the log file for background execution
+# Doing this as early as possible to capture import errors
+try:
+    # Use 'a' for append, and ensure it's written immediately (buffering=1)
+    log_stream = open(LOG_FILE, 'a', encoding='utf-8', buffering=1)
+    sys.stdout = log_stream
+    sys.stderr = log_stream
+    logging.info("Redirecionamento de output configurado.")
+except Exception as e:
+    logging.error(f"Erro ao configurar redirecionamento: {e}")
+
+from tts_engine import TTSEngine
+from audio_player import AudioPlayer
+from ui_overlay import UIOverlay
 
 class ShortcutSignals(QObject):
     """Signals to bridge between keyboard thread and main UI thread."""
@@ -41,8 +55,8 @@ class MainApp:
         self.player = AudioPlayer()
         self.overlay = UIOverlay()
         
-        # Base path for relative components
-        self.base_path = os.path.dirname(os.path.abspath(__file__))
+        # Paths based on script location
+        self.base_path = BASE_PATH
         
         self.temp_audio = os.path.join(self.base_path, "temp_speech.mp3")
         self.last_text = ""
@@ -257,11 +271,11 @@ class MainApp:
         
         if enabled:
             try:
-                # Use base_path to ensure absolute paths
+                # Usando pythonw.exe para execução silenciosa em segundo plano
                 pythonw_path = os.path.join(self.base_path, "venv", "Scripts", "pythonw.exe")
                 script_path = os.path.join(self.base_path, "main.py")
                 
-                logging.info(f"Tentando ativar inicialização. Python: {pythonw_path}, Script: {script_path}")
+                logging.info(f"Tentando ativar inicialização silenciosa. Python: {pythonw_path}, Script: {script_path}")
                 
                 if not os.path.exists(pythonw_path):
                     logging.error(f"Erro: pythonw.exe não encontrado em {pythonw_path}")
@@ -275,7 +289,7 @@ class MainApp:
                 shortcut.WorkingDirectory = self.base_path
                 shortcut.IconLocation = pythonw_path
                 shortcut.save()
-                logging.info(f"Inicialização com Windows ativada com sucesso em: {shortcut_path}")
+                logging.info(f"Inicialização com Windows em segundo plano ativada em: {shortcut_path}")
             except Exception as e:
                 logging.error(f"Erro ao ativar inicialização: {e}")
                 self.startup_action.setChecked(False)
