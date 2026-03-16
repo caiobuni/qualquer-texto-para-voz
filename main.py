@@ -1,19 +1,6 @@
 import sys
 import os
-import asyncio
-import keyboard
-import pyperclip
 import logging
-import shutil
-import time
-import re
-import winshell
-from win32com.client import Dispatch
-from datetime import datetime
-from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QFileDialog, QMessageBox
-from PyQt6.QtGui import QIcon, QAction
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QObject
-from qasync import QEventLoop, asyncSlot
 
 # Robust path handling for relative components
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -26,16 +13,30 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-# Redirect standard output and error to the log file for background execution
-# Doing this as early as possible to capture import errors
+# Redirect stdout/stderr to log file BEFORE heavy imports
+# Under pythonw.exe, sys.stderr is None — any import error would be lost silently
 try:
-    # Use 'a' for append, and ensure it's written immediately (buffering=1)
     log_stream = open(LOG_FILE, 'a', encoding='utf-8', buffering=1)
     sys.stdout = log_stream
     sys.stderr = log_stream
     logging.info("Redirecionamento de output configurado.")
 except Exception as e:
     logging.error(f"Erro ao configurar redirecionamento: {e}")
+
+# Heavy imports — errors now go to app.log
+import asyncio
+import keyboard
+import pyperclip
+import shutil
+import time
+import re
+import winshell
+from win32com.client import Dispatch
+from datetime import datetime
+from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QFileDialog, QMessageBox
+from PyQt6.QtGui import QIcon, QAction
+from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QObject
+from qasync import QEventLoop, asyncSlot
 
 from tts_engine import TTSEngine
 from audio_player import AudioPlayer
@@ -311,5 +312,8 @@ class MainApp:
             loop.run_forever()
 
 if __name__ == "__main__":
-    main_app = MainApp()
-    main_app.run()
+    try:
+        main_app = MainApp()
+        main_app.run()
+    except Exception as e:
+        logging.exception(f"Erro fatal na inicialização: {e}")
