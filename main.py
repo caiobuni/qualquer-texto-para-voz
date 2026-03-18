@@ -82,7 +82,14 @@ class MainApp:
         self.tray_icon.setToolTip("Leitor de Voz (Edge-TTS)\nCtrl+Alt+\\: Ler Seleção\nCtrl+Alt+Z: Ler Clipboard")
         
         menu = QMenu()
-        
+
+        # Action to play from clipboard
+        play_clipboard_action = QAction("Reproduzir da Área de Transferência", menu)
+        play_clipboard_action.triggered.connect(self.process_clipboard_and_read)
+        menu.addAction(play_clipboard_action)
+
+        menu.addSeparator()
+
         # Action to show shortcuts legend
         help_action = QAction("Teclas de Atalho (Legenda)", menu)
         help_action.triggered.connect(self.show_help)
