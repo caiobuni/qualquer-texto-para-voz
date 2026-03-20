@@ -233,14 +233,21 @@ class MainApp:
         text = re.sub(r'http\S+', '', text)
         # Remover headers Markdown (#)
         text = re.sub(r'#+\s*', '', text)
-        # Remover negrito/itálico (**, *, __, _)
-        text = re.sub(r'(\*\*|\*|__|_) (.*?)\1', r'\2', text)
+        # Remover negrito/itálico (**, __, *, _)
+        text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)
+        text = re.sub(r'__(.+?)__', r'\1', text)
+        text = re.sub(r'\*(.+?)\*', r'\1', text)
+        text = re.sub(r'(?<!\w)_(.+?)_(?!\w)', r'\1', text)
         # Remover blocos de código
         text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
+        # Remover timestamps de vídeo [12:34] ou [1:23:45]
+        text = re.sub(r'\[\d{1,2}:\d{2}(?::\d{2})?\]', '', text)
         # Remover links markdown [text](url) -> text
         text = re.sub(r'\[(.*?)\]\(.*?\)', r'\1', text)
         # Remover checklists [x] [ ]
         text = re.sub(r'\[[ xX]?\]\s*', '', text)
+        # Remover marcadores de lista (-, *, •) no início de linhas
+        text = re.sub(r'^\s*[-*•]\s+', '', text, flags=re.MULTILINE)
         # Remover caracteres residuais comuns de formatação
         text = re.sub(r'[`~>]', '', text)
         # Normalizar espaços
