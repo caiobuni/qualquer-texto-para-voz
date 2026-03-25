@@ -22,7 +22,10 @@ class AudioPlayer(QObject):
         self.current_rate = 0.8
 
     def load(self, file_path):
-        self.player.setSource(QUrl()) # Clear previous source
+        # Recriar QAudioOutput para usar o dispositivo padrão atual do sistema
+        self.audio_output = QAudioOutput()
+        self.player.setAudioOutput(self.audio_output)
+        self.player.setSource(QUrl())  # Clear previous source
         self.player.setSource(QUrl.fromLocalFile(file_path))
         self.player.setPlaybackRate(self.current_rate)
 
